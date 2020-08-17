@@ -11,7 +11,7 @@ using namespace ion;
 int main(int argc, char** argv)
 {
 	auto instance = FactoryRegistry::getClassInstance(ciidof<Module>());
-	IModule* cast = (IModule*)ptr->queryInterface(iidof<IModule>());
+	IModule* cast = (IModule*)instance->queryInterface(iidof<IModule>());
 	cast->initialize();
 
 	return 0;
