@@ -12,24 +12,26 @@ namespace ion
 	{
 	public:
 
-		inline FactoryRegistry() { }
+		FactoryRegistry() { }
 
-		inline static IUnknownPtr getClassInstance(ClassID guid)
+		static inline IUnknownPtr getClassInstance(const ClassID& guid)
 		{
 			for(const auto& factory : factories_)
 			{
 				if (guid == factory->ciid())
+				{
 					return factory->createClassInstance();
+				}
 			}
 			return nullptr;
 		}
 
-		inline static void* operator new(size_t, void* instance)
+		static inline void* operator new(size_t, void* instance)
 		{
 			return factories_.emplace_back(reinterpret_cast<IFactory*>(instance));
 		}
 
-		inline static void operator delete(void*, void*) { }
+		static inline void operator delete(void*, void*) { }
 
 	private:
 		

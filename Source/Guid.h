@@ -4,23 +4,10 @@
 
 #pragma once
 
+#include "Common/STL/String.h"
+
 namespace ion
 {
-	template<typename ...TArgs>
-	inline std::string format(const std::string& fmt, TArgs&& ...args)
-	{
-		int size = std::snprintf(nullptr, 0, fmt.c_str(), std::forward<TArgs>(args)...) + 1;
-
-		if (size <= 0)
-		{
-			throw std::logic_error("Error during formatting");
-		}
-
-		std::unique_ptr<char[]> buffer = std::make_unique<char[]>(size);
-		std::snprintf(buffer.get(), static_cast<size_t>(size), fmt.c_str(), std::forward<TArgs>(args)...);
-		return std::string(buffer.get(), buffer.get() + size - 1);
-	}
-
 	struct Guid
 	{
 		uint32_t data1;
@@ -35,27 +22,26 @@ namespace ion
 			data4{ rhs.data4[0], rhs.data4[1], rhs.data4[2], rhs.data4[3], rhs.data4[4], 
 			rhs.data4[5], rhs.data4[6], rhs.data4[7] } { }
 
-		constexpr Guid(const uint32_t& data1_, const uint16_t& data2_, const uint16_t& data3_,
-			const uint8_t& data4_0, const uint8_t& data4_1, const uint8_t& data4_2, const uint8_t& data4_3,
-			const uint8_t& data4_4, const uint8_t& data4_5, const uint8_t& data4_6, const uint8_t& data4_7) : 
+		constexpr Guid(const uint32_t data1_, const uint16_t data2_, const uint16_t data3_,
+			const uint8_t data4_[8]) : 
 			data1(data1_), data2(data2_), data3(data3_),
-			data4{ data4_0, data4_1, data4_2, data4_3, data4_4, data4_5, data4_6, data4_7 } { }
+			data4{ data4_[0], data4_[1], data4_[2], data4_[3], data4_[4], data4_[5], data4_[6], data4_[7] } { }
 
 		struct Utils
 		{
-			static constexpr uint8_t hexCharToUInt8(char c)
+			static constexpr uint8_t hexCharToUInt8(const char c)
 			{
 				return c >= '0' && c <= '9' ? c - '0' :
 					c >= 'a' && c <= 'f' ? c - 'a' + 10 :
 					c >= 'A' && c <= 'F' ? c - 'A' + 10 : 0;
 			}
 
-			static constexpr uint16_t hexCharToUInt16(char c)
+			static constexpr uint16_t hexCharToUInt16(const char c)
 			{
 				return static_cast<uint16_t>(hexCharToUInt8(c));
 			}
 
-			static constexpr uint32_t hexCharToUInt32(char c)
+			static constexpr uint32_t hexCharToUInt32(const char c)
 			{
 				return static_cast<uint32_t>(hexCharToUInt8(c));
 			}
@@ -86,20 +72,19 @@ namespace ion
 			uint16_t data2 = Utils::hexStringToUInt16(guid + 9);
 			uint16_t data3 = Utils::hexStringToUInt16(guid + 14);
 			uint8_t data4[8] = {
+
 				Utils::hexStringToUInt8(guid + 19), Utils::hexStringToUInt8(guid + 21),
 				Utils::hexStringToUInt8(guid + 24), Utils::hexStringToUInt8(guid + 26),
 				Utils::hexStringToUInt8(guid + 28), Utils::hexStringToUInt8(guid + 30),
 				Utils::hexStringToUInt8(guid + 32), Utils::hexStringToUInt8(guid + 34)
 			};
 
-			return Guid(data1, data2, data3,
-				data4[0], data4[1], data4[2], data4[3], 
-				data4[4], data4[5], data4[6], data4[7]);
+			return Guid(data1, data2, data3, data4);
 		}
 
 		static constexpr Guid null()
 		{
-			return Guid(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			return Guid(0, 0, 0, 0);
 		}
 
 		inline const std::string toString() const
@@ -111,7 +96,7 @@ namespace ion
 				data4[6], data4[7]);
 		}
 
-		inline static Guid generate()
+		static inline Guid generate()
 		{
 			const char* temp = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
 			const char* hex = "0123456789abcdef";
@@ -142,9 +127,9 @@ namespace ion
 		}
 	};
 
-	constexpr Guid operator""_guid(const char* guid, size_t)
+	constexpr Guid operator""_guid(const char* lhs, size_t)
 	{
-		return (guid[0] == '{') ? Guid::construct(guid + 1) : Guid::construct(guid);
+		return (lhs[0] == '{') ? Guid::construct(lhs + 1) : Guid::construct(lhs);
 	}
 
 	inline std::ostream& operator<<(std::ostream& os, const Guid& rhs)

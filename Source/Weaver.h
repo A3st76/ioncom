@@ -6,6 +6,7 @@
 
 #include "IFactory.h"
 #include "TypeList.h"
+#include "IUnknown.h"
 #include "FactoryRegistry.h"
 
 namespace ion
@@ -56,11 +57,18 @@ namespace ion
 		static void* cast(TClass* instance, const InterfaceID& iid)
 		{
 			if (iidof<TypeList<Head, Tail...>::Head>() == iid)
+			{
 				return internal::interfaceCast<TypeList<Head, Tail...>::Head>::cast(instance);
-
+			}
 			return interfaceCast<TypeList<Head, Tail...>::Tail>::cast(instance, iid);
 		}
 	};
+
+	template<class TClass>
+	inline TClass* interface_cast(IUnknownPtr instance)
+	{
+		return static_cast<TClass*>(instance->queryInterface(iidof<TClass>()));
+	}
 
 	template<class TClass>
 	class Factory : public IFactory
